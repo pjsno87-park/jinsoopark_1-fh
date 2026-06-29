@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>인사말 생성기 - SPA</title>
+    <!-- Google Fonts: Outfit -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Noto+Sans+KR:wght@300;400;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #311042 100%);
+            --card-bg: rgba(255, 255, 255, 0.03);
+            --card-border: rgba(255, 255, 255, 0.08);
+            --card-border-focus: rgba(168, 85, 247, 0.4);
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --accent-primary: #a855f7;
+            --accent-secondary: #ec4899;
+            --accent-gradient: linear-gradient(135deg, #a855f7 0%, #ec4899 100%);
+            --shadow-neon: 0 0 20px rgba(168, 85, 247, 0.2);
+            --font-family: 'Outfit', 'Noto Sans KR', sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--font-family);
+            background: var(--bg-gradient);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* 배경에 은은한 움직이는 빛 효과 부여 */
+        body::before, body::after {
+            content: '';
+            position: absolute;
+            width: 400px;
+            height: 400px;
+            border-radius: 50%;
+            filter: blur(100px);
+            z-index: 0;
+            opacity: 0.15;
+            pointer-events: none;
+            animation: float 12s infinite alternate ease-in-out;
+        }
+
+        body::before {
+            background: var(--accent-primary);
+            top: -10%;
+            left: 10%;
+        }
+
+        body::after {
+            background: var(--accent-secondary);
+            bottom: -10%;
+            right: 10%;
+            animation-delay: -6s;
+        }
+
+        @keyframes float {
+            0% { transform: translate(0, 0) scale(1); }
+            100% { transform: translate(50px, 50px) scale(1.2); }
+        }
+
+        .container {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            max-width: 480px;
+            padding: 20px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--card-border);
+            border-radius: 24px;
+            padding: 40px 30px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            text-align: center;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.4),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.15);
+        }
+
+        h1 {
+            font-size: 2.2rem;
+            font-weight: 800;
+            margin-bottom: 8px;
+            background: var(--accent-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -0.5px;
+        }
+
+        .subtitle {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            margin-bottom: 35px;
+            font-weight: 300;
+        }
+
+        .input-group {
+            position: relative;
+            margin-bottom: 24px;
+            text-align: left;
+        }
+
+        label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+            margin-left: 4px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 16px 20px;
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid var(--card-border);
+            border-radius: 14px;
+            color: var(--text-primary);
+            font-size: 1rem;
+            font-family: var(--font-family);
+            outline: none;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        input[type="text"]:focus {
+            border-color: var(--accent-primary);
+            box-shadow: var(--shadow-neon), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+            background: rgba(0, 0, 0, 0.3);
+        }
+
+        input[type="text"]::placeholder {
+            color: rgba(255, 255, 255, 0.25);
+        }
+
+        .btn-submit {
+            width: 100%;
+            padding: 16px;
+            background: var(--accent-gradient);
+            border: none;
+            border-radius: 14px;
+            color: #ffffff;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(168, 85, 247, 0.3);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-submit:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(168, 85, 247, 0.5);
+            filter: brightness(1.1);
+        }
+
+        .btn-submit:active {
+            transform: translateY(1px);
+        }
+
+        /* 결과 영역 스타일 */
+        .result-container {
+            margin-top: 30px;
+            height: 0;
+            opacity: 0;
+            overflow: hidden;
+            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            transform: scale(0.9);
+        }
+
+        .result-container.show {
+            height: auto;
+            opacity: 1;
+            transform: scale(1);
+            margin-top: 35px;
+            padding-top: 25px;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .greeting-message {
+            font-size: 1.35rem;
+            font-weight: 600;
+            line-height: 1.5;
+            color: var(--text-primary);
+        }
+
+        .greeting-name {
+            background: var(--accent-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 800;
+            font-size: 1.5rem;
+            display: inline-block;
+        }
+
+        .greeting-subtext {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-top: 8px;
+            font-weight: 300;
+        }
+
+        /* 리플 효과 및 데코레이션 */
+        .sparkle-icon {
+            font-size: 1.2rem;
+            animation: spin 4s linear infinite;
+        }
+
+        @keyframes spin {
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="card">
+            <h1>Hello, Guest!</h1>
+            <p class="subtitle">이름을 입력하시면 특별한 인사를 건넵니다.</p>
+
+            <form id="greetingForm" onsubmit="generateGreeting(event)">
+                <div class="input-group">
+                    <label for="userName">이름</label>
+                    <div class="input-wrapper">
+                        <input 
+                            type="text" 
+                            id="userName" 
+                            placeholder="여기에 이름을 입력해 주세요" 
+                            required 
+                            autocomplete="off"
+                            maxlength="20"
+                        >
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-submit">
+                    <span>인사 나누기</span>
+                    <span class="sparkle-icon">✨</span>
+                </button>
+            </form>
+
+            <div id="resultContainer" class="result-container">
+                <div class="greeting-message">
+                    반가워요, <span id="displayName" class="greeting-name"></span>님!
+                </div>
+                <div id="greetingSubtext" class="greeting-subtext"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function generateGreeting(event) {
+            event.preventDefault();
+
+            const nameInput = document.getElementById('userName');
+            const resultContainer = document.getElementById('resultContainer');
+            const displayName = document.getElementById('displayName');
+            const greetingSubtext = document.getElementById('greetingSubtext');
+            const name = nameInput.value.trim();
+
+            if (!name) return;
+
+            // 시간대에 따른 맞춤형 서브 메시지 제공
+            const hours = new Date().getHours();
+            let timeMessage = '';
+
+            if (hours >= 5 && hours < 12) {
+                timeMessage = '상쾌하고 활기찬 아침입니다. 오늘 하루도 좋은 일만 가득하시길 바랄게요! ☀️';
+            } else if (hours >= 12 && hours < 18) {
+                timeMessage = '나른할 수 있는 오후네요. 시원한 음료와 함께 즐거운 시간 보내세요! ☕';
+            } else if (hours >= 18 && hours < 22) {
+                timeMessage = '편안한 저녁 시간 보내고 계시기를 바랍니다. 오늘 하루 수고 많으셨어요! 🌙';
+            } else {
+                timeMessage = '고요한 밤이네요. 편안하고 따뜻한 밤 되세요. ⭐️';
+            }
+
+            // UI 업데이트
+            displayName.textContent = name;
+            greetingSubtext.textContent = timeMessage;
+
+            // 애니메이션 초기화 후 다시 재생하기 위한 처리
+            resultContainer.classList.remove('show');
+            
+            // 리플로우 강제 트리거를 통해 CSS transition이 정상 적용되도록 함
+            void resultContainer.offsetWidth;
+
+            resultContainer.classList.add('show');
+        }
+
+        // 입력창에 반응하여 실시간으로 타이틀이 변하는 마이크로 인터랙션
+        const nameInput = document.getElementById('userName');
+        const mainTitle = document.querySelector('h1');
+
+        nameInput.addEventListener('input', (e) => {
+            const val = e.target.value.trim();
+            if (val) {
+                mainTitle.innerHTML = `Hello, <span style="background: var(--accent-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">${val}</span>!`;
+            } else {
+                mainTitle.textContent = 'Hello, Guest!';
+            }
+        });
+    </script>
+</body>
+</html>
