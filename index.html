@@ -1,336 +1,1211 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>인사말 생성기 - SPA</title>
-    <!-- Google Fonts: Outfit -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Noto+Sans+KR:wght@300;400;700&display=swap" rel="stylesheet">
-    
-    <style>
-        :root {
-            --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #311042 100%);
-            --card-bg: rgba(255, 255, 255, 0.03);
-            --card-border: rgba(255, 255, 255, 0.08);
-            --card-border-focus: rgba(168, 85, 247, 0.4);
-            --text-primary: #f8fafc;
-            --text-secondary: #94a3b8;
-            --accent-primary: #a855f7;
-            --accent-secondary: #ec4899;
-            --accent-gradient: linear-gradient(135deg, #a855f7 0%, #ec4899 100%);
-            --shadow-neon: 0 0 20px rgba(168, 85, 247, 0.2);
-            --font-family: 'Outfit', 'Noto Sans KR', sans-serif;
-        }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>UP DOWN 숫자 맞추기 게임 (웹 접근성 준수)</title>
+  <!-- Google Fonts Outfit & Noto Sans KR -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+  
+  <style>
+    :root {
+      --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #311042 100%);
+      --card-bg: rgba(30, 41, 59, 0.45);
+      --card-border: rgba(255, 255, 255, 0.08);
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      
+      --color-primary: #8b5cf6;
+      --color-primary-glow: rgba(139, 92, 246, 0.4);
+      --color-up: #f97316;
+      --color-up-glow: rgba(249, 115, 22, 0.4);
+      --color-down: #38bdf8; /* Adjusted cyan for better contrast */
+      --color-down-glow: rgba(56, 189, 248, 0.4);
+      --color-correct: #10b981;
+      --color-correct-glow: rgba(16, 185, 129, 0.4);
+      --color-wrong: #ef4444;
+      --color-wrong-glow: rgba(239, 68, 68, 0.4);
+      
+      --font-outfit: 'Outfit', 'Noto Sans KR', sans-serif;
+      --font-kr: 'Noto Sans KR', sans-serif;
+    }
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
+    /* Screen reader only utility class */
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
 
-        body {
-            font-family: var(--font-family);
-            background: var(--bg-gradient);
-            color: var(--text-primary);
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            overflow: hidden;
-            position: relative;
-        }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
 
-        /* 배경에 은은한 움직이는 빛 효과 부여 */
-        body::before, body::after {
-            content: '';
-            position: absolute;
-            width: 400px;
-            height: 400px;
-            border-radius: 50%;
-            filter: blur(100px);
-            z-index: 0;
-            opacity: 0.15;
-            pointer-events: none;
-            animation: float 12s infinite alternate ease-in-out;
-        }
+    body {
+      background: var(--bg-gradient);
+      color: var(--text-main);
+      font-family: var(--font-kr);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      overflow-x: hidden;
+      perspective: 1000px;
+    }
 
-        body::before {
-            background: var(--accent-primary);
-            top: -10%;
-            left: 10%;
-        }
+    /* Container holding the application */
+    .game-container {
+      width: 100%;
+      max-width: 600px;
+      background: var(--card-bg);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--card-border);
+      border-radius: 24px;
+      padding: 32px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35),
+                  inset 0 1px 0 rgba(255, 255, 255, 0.1);
+      transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+    }
 
-        body::after {
-            background: var(--accent-secondary);
-            bottom: -10%;
-            right: 10%;
-            animation-delay: -6s;
-        }
+    header {
+      text-align: center;
+      margin-bottom: 24px;
+    }
 
-        @keyframes float {
-            0% { transform: translate(0, 0) scale(1); }
-            100% { transform: translate(50px, 50px) scale(1.2); }
-        }
+    h1 {
+      font-family: var(--font-outfit);
+      font-size: 2.2rem;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      background: linear-gradient(to right, #a78bfa, #f472b6);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      text-shadow: 0 2px 20px rgba(167, 139, 250, 0.2);
+    }
 
-        .container {
-            position: relative;
-            z-index: 1;
-            width: 100%;
-            max-width: 480px;
-            padding: 20px;
-        }
+    .subtitle {
+      font-size: 0.95rem;
+      color: var(--text-muted);
+      font-weight: 300;
+    }
 
-        .card {
-            background: var(--card-bg);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border: 1px solid var(--card-border);
-            border-radius: 24px;
-            padding: 40px 30px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3),
-                        inset 0 1px 0 rgba(255, 255, 255, 0.1);
-            text-align: center;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-        }
+    /* Collapsible Configuration Card */
+    .config-accordion {
+      background: rgba(15, 23, 42, 0.4);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 12px;
+      margin-bottom: 24px;
+      overflow: hidden;
+      transition: all 0.3s ease;
+    }
 
-        .card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.4),
-                        inset 0 1px 0 rgba(255, 255, 255, 0.15);
-        }
+    .config-header {
+      padding: 12px 20px;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-weight: 500;
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      user-select: none;
+      transition: background 0.2s;
+    }
 
-        h1 {
-            font-size: 2.2rem;
-            font-weight: 800;
-            margin-bottom: 8px;
-            background: var(--accent-gradient);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            letter-spacing: -0.5px;
-        }
+    .config-header:hover {
+      background: rgba(255, 255, 255, 0.02);
+      color: var(--text-main);
+    }
 
-        .subtitle {
-            color: var(--text-secondary);
-            font-size: 0.95rem;
-            margin-bottom: 35px;
-            font-weight: 300;
-        }
+    .config-header svg {
+      width: 16px;
+      height: 16px;
+      transition: transform 0.3s ease;
+      fill: currentColor;
+    }
 
-        .input-group {
-            position: relative;
-            margin-bottom: 24px;
-            text-align: left;
-        }
+    .config-content {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease;
+      padding: 0 20px;
+    }
 
-        label {
-            display: block;
-            font-size: 0.85rem;
-            font-weight: 600;
-            color: var(--text-secondary);
-            margin-bottom: 8px;
-            margin-left: 4px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
+    .config-accordion.open .config-content {
+      max-height: 300px;
+      padding: 16px 20px 20px;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+    }
 
-        .input-wrapper {
-            position: relative;
-        }
+    .config-accordion.open .config-header svg {
+      transform: rotate(180deg);
+    }
 
-        input[type="text"] {
-            width: 100%;
-            padding: 16px 20px;
-            background: rgba(0, 0, 0, 0.2);
-            border: 1px solid var(--card-border);
-            border-radius: 14px;
-            color: var(--text-primary);
-            font-size: 1rem;
-            font-family: var(--font-family);
-            outline: none;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+    }
 
-        input[type="text"]:focus {
-            border-color: var(--accent-primary);
-            box-shadow: var(--shadow-neon), inset 0 1px 0 rgba(255, 255, 255, 0.05);
-            background: rgba(0, 0, 0, 0.3);
-        }
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
 
-        input[type="text"]::placeholder {
-            color: rgba(255, 255, 255, 0.25);
-        }
+    .form-group label {
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: var(--text-muted);
+    }
 
-        .btn-submit {
-            width: 100%;
-            padding: 16px;
-            background: var(--accent-gradient);
-            border: none;
-            border-radius: 14px;
-            color: #ffffff;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(168, 85, 247, 0.3);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 8px;
-        }
+    .form-group input {
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      padding: 8px 12px;
+      color: white;
+      font-size: 0.9rem;
+      outline: none;
+      transition: border 0.2s;
+    }
 
-        .btn-submit:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 6px 20px rgba(168, 85, 247, 0.5);
-            filter: brightness(1.1);
-        }
+    .form-group input:focus {
+      border-color: var(--color-primary);
+      box-shadow: 0 0 0 2px var(--color-primary-glow);
+    }
 
-        .btn-submit:active {
-            transform: translateY(1px);
-        }
+    .admin-toggle-btn {
+      background: transparent;
+      border: 1px dashed rgba(255,255,255,0.15);
+      border-radius: 6px;
+      padding: 6px;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      cursor: pointer;
+      margin-top: 12px;
+      width: 100%;
+      text-align: center;
+      transition: all 0.2s;
+    }
 
-        /* 결과 영역 스타일 */
-        .result-container {
-            margin-top: 30px;
-            height: 0;
-            opacity: 0;
-            overflow: hidden;
-            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            transform: scale(0.9);
-        }
+    .admin-toggle-btn:hover {
+      border-color: var(--color-primary);
+      color: var(--text-main);
+    }
 
-        .result-container.show {
-            height: auto;
-            opacity: 1;
-            transform: scale(1);
-            margin-top: 35px;
-            padding-top: 25px;
-            border-top: 1px solid rgba(255, 255, 255, 0.08);
-        }
+    .admin-box {
+      margin-top: 8px;
+      padding: 8px;
+      background: rgba(220, 38, 38, 0.05);
+      border: 1px solid rgba(220, 38, 38, 0.15);
+      border-radius: 6px;
+      display: none;
+    }
 
-        .greeting-message {
-            font-size: 1.35rem;
-            font-weight: 600;
-            line-height: 1.5;
-            color: var(--text-primary);
-        }
+    .admin-box label {
+      font-size: 0.75rem;
+      color: #fca5a5;
+    }
 
-        .greeting-name {
-            background: var(--accent-gradient);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            font-weight: 800;
-            font-size: 1.5rem;
-            display: inline-block;
-        }
+    /* Range Status Dashboard */
+    .dashboard-panel {
+      text-align: center;
+      margin-bottom: 24px;
+    }
 
-        .greeting-subtext {
-            color: var(--text-secondary);
-            font-size: 0.9rem;
-            margin-top: 8px;
-            font-weight: 300;
-        }
+    .range-visualizer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(15, 23, 42, 0.3);
+      border-radius: 16px;
+      padding: 16px 24px;
+      margin-bottom: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.03);
+    }
 
-        /* 리플 효과 및 데코레이션 */
-        .sparkle-icon {
-            font-size: 1.2rem;
-            animation: spin 4s linear infinite;
-        }
+    .range-node {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-width: 70px;
+    }
 
-        @keyframes spin {
-            100% { transform: rotate(360deg); }
-        }
-    </style>
+    .range-node .label {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      margin-bottom: 4px;
+      letter-spacing: 0.5px;
+    }
+
+    .range-node .val {
+      font-family: var(--font-outfit);
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    .range-node.active .val {
+      color: var(--color-primary);
+      text-shadow: 0 0 10px var(--color-primary-glow);
+    }
+
+    .range-connector {
+      flex: 1;
+      height: 4px;
+      background: rgba(255, 255, 255, 0.08);
+      margin: 0 16px;
+      position: relative;
+      border-radius: 2px;
+      overflow: hidden;
+    }
+
+    .range-connector-fill {
+      position: absolute;
+      left: 0;
+      top: 0;
+      height: 100%;
+      width: 100%;
+      background: linear-gradient(to right, var(--color-primary), #ec4899);
+      transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    /* Hearts and attempt bar */
+    .status-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 4px;
+    }
+
+    .attempt-text {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      font-weight: 400;
+    }
+
+    .attempt-text span {
+      font-family: var(--font-outfit);
+      color: var(--text-main);
+      font-weight: 700;
+    }
+
+    .hearts-container {
+      display: flex;
+      gap: 6px;
+    }
+
+    .heart {
+      font-size: 1.1rem;
+      color: #ef4444;
+      filter: drop-shadow(0 0 4px rgba(239, 68, 68, 0.4));
+      transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .heart.lost {
+      color: rgba(255, 255, 255, 0.15);
+      filter: none;
+      transform: scale(0.8) rotate(15deg);
+    }
+
+    /* Large Feedback Badge */
+    .feedback-card {
+      background: rgba(15, 23, 42, 0.5);
+      border-radius: 20px;
+      padding: 24px;
+      text-align: center;
+      margin-bottom: 28px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      min-height: 140px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .feedback-icon {
+      font-size: 2.2rem;
+      margin-bottom: 8px;
+      animation: bounce 2s infinite;
+    }
+
+    .feedback-title {
+      font-size: 1.8rem;
+      font-weight: 900;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+
+    .feedback-desc {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    /* Feedback visual themes */
+    .feedback-card.ready {
+      border-color: rgba(255, 255, 255, 0.1);
+    }
+    .feedback-card.ready .feedback-title {
+      color: var(--text-main);
+    }
+
+    .feedback-card.up {
+      border-color: var(--color-up);
+      box-shadow: 0 0 20px var(--color-up-glow);
+      transform: translateY(-4px);
+    }
+    .feedback-card.up .feedback-title {
+      color: var(--color-up);
+      text-shadow: 0 0 10px var(--color-up-glow);
+    }
+
+    .feedback-card.down {
+      border-color: var(--color-down);
+      box-shadow: 0 0 20px var(--color-down-glow);
+      transform: translateY(-4px);
+    }
+    .feedback-card.down .feedback-title {
+      color: var(--color-down);
+      text-shadow: 0 0 10px var(--color-down-glow);
+    }
+
+    .feedback-card.correct {
+      border-color: var(--color-correct);
+      box-shadow: 0 0 25px var(--color-correct-glow);
+      transform: scale(1.02);
+      animation: victoryPulse 1.5s infinite;
+    }
+    .feedback-card.correct .feedback-title {
+      color: var(--color-correct);
+      text-shadow: 0 0 12px var(--color-correct-glow);
+    }
+
+    .feedback-card.gameover {
+      border-color: var(--color-wrong);
+      box-shadow: 0 0 20px var(--color-wrong-glow);
+      animation: shake 0.5s ease-in-out;
+    }
+    .feedback-card.gameover .feedback-title {
+      color: var(--color-wrong);
+      text-shadow: 0 0 10px var(--color-wrong-glow);
+    }
+
+    /* Guess Input Panel */
+    .input-section {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    .input-wrapper {
+      flex: 1;
+      position: relative;
+    }
+
+    .guess-input {
+      width: 100%;
+      background: rgba(15, 23, 42, 0.7);
+      border: 2px solid rgba(255, 255, 255, 0.1);
+      border-radius: 16px;
+      padding: 16px 20px;
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: white;
+      outline: none;
+      text-align: center;
+      transition: all 0.3s;
+      font-family: var(--font-outfit);
+    }
+
+    .guess-input:focus {
+      border-color: var(--color-primary);
+      box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.4);
+    }
+
+    .guess-input:disabled {
+      background: rgba(15, 23, 42, 0.3);
+      border-color: rgba(255, 255, 255, 0.05);
+      color: var(--text-muted);
+      cursor: not-allowed;
+    }
+
+    .btn {
+      border: none;
+      border-radius: 16px;
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 1rem;
+      transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .btn:focus-visible {
+      outline: 3px solid #38bdf8;
+      outline-offset: 2px;
+    }
+
+    .btn-submit {
+      padding: 0 28px;
+      background: linear-gradient(135deg, var(--color-primary) 0%, #7c3aed 100%);
+      color: white;
+      box-shadow: 0 4px 15px rgba(124, 58, 237, 0.3);
+    }
+
+    .btn-submit:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(124, 58, 237, 0.45);
+    }
+
+    .btn-submit:active:not(:disabled) {
+      transform: translateY(1px);
+    }
+
+    .btn-submit:disabled {
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text-muted);
+      box-shadow: none;
+      cursor: not-allowed;
+    }
+
+    /* Bottom Control Bar */
+    .controls-bar {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-bottom: 28px;
+    }
+
+    .btn-control {
+      padding: 14px 12px;
+      border-radius: 12px;
+      font-size: 0.9rem;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      white-space: nowrap;
+    }
+
+    .btn-reset {
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--text-main);
+    }
+
+    .btn-reset:hover {
+      background: rgba(255, 255, 255, 0.12);
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .btn-exit {
+      background: rgba(239, 68, 68, 0.08);
+      border-color: rgba(239, 68, 68, 0.2);
+      color: #fca5a5;
+    }
+
+    .btn-exit:hover {
+      background: rgba(239, 68, 68, 0.18);
+      border-color: rgba(239, 68, 68, 0.4);
+      color: white;
+    }
+
+    .btn-tts {
+      background: rgba(139, 92, 246, 0.1);
+      border-color: rgba(139, 92, 246, 0.25);
+      color: #c084fc;
+    }
+
+    .btn-tts.muted {
+      background: rgba(255, 255, 255, 0.03);
+      border-color: rgba(255, 255, 255, 0.08);
+      color: var(--text-muted);
+    }
+
+    .btn-tts:hover {
+      border-color: var(--color-primary);
+      color: white;
+    }
+
+    /* History Log Card */
+    .history-card {
+      background: rgba(15, 23, 42, 0.25);
+      border-radius: 16px;
+      padding: 20px;
+      border: 1px solid rgba(255, 255, 255, 0.04);
+    }
+
+    .history-title {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      margin-bottom: 12px;
+      letter-spacing: 0.5px;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .history-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      max-height: 150px;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+
+    /* Custom scrollbar for history list */
+    .history-list::-webkit-scrollbar {
+      width: 4px;
+    }
+    .history-list::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    .history-list::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 2px;
+    }
+
+    .history-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 12px;
+      background: rgba(255, 255, 255, 0.02);
+      border-radius: 8px;
+      font-size: 0.85rem;
+      border: 1px solid rgba(255, 255, 255, 0.02);
+      animation: slideIn 0.3s ease;
+    }
+
+    .history-idx {
+      font-family: var(--font-outfit);
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    .history-val {
+      font-family: var(--font-outfit);
+      font-weight: 700;
+    }
+
+    .history-badge {
+      padding: 2px 8px;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .history-badge.up {
+      background: rgba(249, 115, 22, 0.15);
+      color: var(--color-up);
+    }
+    .history-badge.down {
+      background: rgba(56, 189, 248, 0.15);
+      color: var(--color-down);
+    }
+    .history-badge.correct {
+      background: rgba(16, 185, 129, 0.15);
+      color: var(--color-correct);
+    }
+
+    /* Animations */
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-6px); }
+    }
+
+    @keyframes victoryPulse {
+      0% { box-shadow: 0 0 25px rgba(16, 185, 129, 0.3); }
+      50% { box-shadow: 0 0 35px rgba(16, 185, 129, 0.6); }
+      100% { box-shadow: 0 0 25px rgba(16, 185, 129, 0.3); }
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      20%, 60% { transform: translateX(-6px); }
+      40%, 80% { transform: translateX(6px); }
+    }
+
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 580px) {
+      .game-container {
+        padding: 20px;
+      }
+      h1 {
+        font-size: 1.8rem;
+      }
+      .range-visualizer {
+        padding: 12px 16px;
+      }
+      .range-node .val {
+        font-size: 1.15rem;
+      }
+      .controls-bar {
+        grid-template-columns: 1fr;
+        gap: 8px;
+      }
+      .input-section {
+        flex-direction: column;
+      }
+      .btn-submit {
+        padding: 14px;
+      }
+    }
+  </style>
 </head>
 <body>
 
-    <div class="container">
-        <div class="card">
-            <h1>Hello, Guest!</h1>
-            <p class="subtitle">이름을 입력하시면 특별한 인사를 건넵니다.</p>
+  <!-- Screen reader only skip link / instructions -->
+  <div class="sr-only" id="instructions">
+    이것은 업 다운 숫자 맞추기 게임입니다. 탭 키를 사용하여 각 버튼과 입력을 탐색할 수 있습니다. 
+    기본적으로 음성 안내 기능이 켜져 있어 결과가 스피커로 나옵니다.
+  </div>
 
-            <form id="greetingForm" onsubmit="generateGreeting(event)">
-                <div class="input-group">
-                    <label for="userName">이름</label>
-                    <div class="input-wrapper">
-                        <input 
-                            type="text" 
-                            id="userName" 
-                            placeholder="여기에 이름을 입력해 주세요" 
-                            required 
-                            autocomplete="off"
-                            maxlength="20"
-                        >
-                    </div>
-                </div>
+  <main class="game-container" role="main" aria-describedby="instructions">
+    <header>
+      <h1>Up & Down Game</h1>
+      <div class="subtitle">지정된 범위 내의 임의의 숫자를 맞춰보세요!</div>
+    </header>
 
-                <button type="submit" class="btn-submit">
-                    <span>인사 나누기</span>
-                    <span class="sparkle-icon">✨</span>
-                </button>
-            </form>
+    <!-- Accessibility Status Indicator (Secretly speaks via ARIA Live if voice disabled) -->
+    <div id="ariaLiveRegion" class="sr-only" aria-live="assertive" aria-atomic="true"></div>
 
-            <div id="resultContainer" class="result-container">
-                <div class="greeting-message">
-                    반가워요, <span id="displayName" class="greeting-name"></span>님!
-                </div>
-                <div id="greetingSubtext" class="greeting-subtext"></div>
-            </div>
+    <!-- Game Settings (Config) Accordion -->
+    <section class="config-accordion" id="configAccordion" aria-label="게임 환경 설정">
+      <div class="config-header" onclick="toggleConfig()" role="button" aria-expanded="false" aria-controls="configContent" tabindex="0" id="configHeaderBtn">
+        <span>⚙️ 게임 환경 설정</span>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10l5 5 5-5z"/></svg>
+      </div>
+      <div class="config-content" id="configContent" role="region" aria-labelledby="configHeaderBtn">
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="minRangeInput">최소값 (Min)</label>
+            <input type="number" id="minRangeInput" value="1" min="0" max="9999" aria-label="최소값">
+          </div>
+          <div class="form-group">
+            <label for="maxRangeInput">최대값 (Max)</label>
+            <input type="number" id="maxRangeInput" value="100" min="1" max="10000" aria-label="최대값">
+          </div>
+          <div class="form-group">
+            <label for="attemptsInput">도전 기회 (비워두면 자동 계산)</label>
+            <input type="number" id="attemptsInput" placeholder="자동 설정" min="1" max="50" aria-label="도전 기회 개수">
+          </div>
+          <div class="form-group">
+            <label>&nbsp;</label>
+            <button class="btn btn-reset" style="padding: 8px; font-size: 0.85rem; border-radius: 8px;" onclick="applySettings()" aria-label="게임 환경 설정 적용 및 리셋">설정 적용 & 리셋</button>
+          </div>
         </div>
+        
+        <button class="admin-toggle-btn" onclick="toggleAdminBox()" id="adminToggleBtn" aria-expanded="false" aria-controls="adminBox">🔧 관리자/출제자 도구 (테스트용)</button>
+        <div class="admin-box" id="adminBox" role="region" aria-labelledby="adminToggleBtn">
+          <div class="form-group">
+            <label for="customSecretInput">정답(비밀 숫자) 직접 입력</label>
+            <div style="display: flex; gap: 8px; margin-top: 4px;">
+              <input type="number" id="customSecretInput" placeholder="미지정 시 자동 롤링" style="flex: 1;" aria-label="임의 고정 정답 입력">
+              <button class="btn btn-submit" style="padding: 0 12px; font-size: 0.8rem; border-radius: 6px;" onclick="applyCustomSecret()" aria-label="고정 정답 설정">설정</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Dashboard Panel -->
+    <section class="dashboard-panel" aria-label="현재 게임 상태판">
+      <div class="range-visualizer" id="rangeVisualizer" aria-live="polite" aria-atomic="true">
+        <div class="range-node" id="minNode">
+          <span class="label">최소</span>
+          <span class="val" id="displayMin">1</span>
+        </div>
+        <div class="range-connector" aria-hidden="true">
+          <div class="range-connector-fill" id="connectorFill"></div>
+        </div>
+        <div class="range-node" id="maxNode">
+          <span class="label">최대</span>
+          <span class="val" id="displayMax">100</span>
+        </div>
+      </div>
+
+      <div class="status-bar">
+        <div class="attempt-text" aria-live="polite">
+          진행률: <span id="currentAttemptNum">1</span> / <span id="totalAttemptsNum">7</span>
+        </div>
+        <div class="hearts-container" id="heartsContainer" role="img">
+          <!-- Heart icons generated here with aria-label -->
+        </div>
+      </div>
+    </section>
+
+    <!-- Big Feedback Display -->
+    <div class="feedback-card ready" id="feedbackCard" aria-live="assertive" aria-atomic="true" tabindex="0">
+      <div class="feedback-icon" id="feedbackIcon" aria-hidden="true">🎯</div>
+      <div class="feedback-title" id="feedbackTitle">READY</div>
+      <div class="feedback-desc" id="feedbackDesc">숫자를 입력하고 추측을 시작하세요!</div>
     </div>
 
-    <script>
-        function generateGreeting(event) {
-            event.preventDefault();
+    <!-- Input Section -->
+    <section class="input-section" aria-label="숫자 제출 영역">
+      <div class="input-wrapper">
+        <label for="guessInput" class="sr-only">맞출 숫자를 여기에 쓰세요</label>
+        <input type="number" class="guess-input" id="guessInput" placeholder="숫자 입력" autocomplete="off" aria-describedby="feedbackCard">
+      </div>
+      <button class="btn btn-submit" id="submitBtn" onclick="handleGuessSubmit()" aria-label="제출 버튼">제출</button>
+    </section>
 
-            const nameInput = document.getElementById('userName');
-            const resultContainer = document.getElementById('resultContainer');
-            const displayName = document.getElementById('displayName');
-            const greetingSubtext = document.getElementById('greetingSubtext');
-            const name = nameInput.value.trim();
+    <!-- Control Area -->
+    <section class="controls-bar" aria-label="게임 관리 버튼 모음">
+      <button class="btn btn-control btn-reset" onclick="resetGame()" aria-label="새 게임으로 다시 시작">
+        <span>🔄</span> 다시 하기 (Reset)
+      </button>
+      <button class="btn btn-control btn-tts" id="ttsToggleBtn" onclick="toggleTTS()" aria-pressed="true" aria-label="음성 안내 켜짐">
+        <span>🔊</span> 음성: 켜짐
+      </button>
+      <button class="btn btn-control btn-exit" onclick="exitGame()" aria-label="게임 기권 및 정답 공개">
+        <span>🏳️</span> 게임 종료 (Exit)
+      </button>
+    </section>
 
-            if (!name) return;
+    <!-- History Panel -->
+    <section class="history-card" aria-label="지난 도전 기록">
+      <h2 class="history-title">
+        <span>히스토리</span>
+        <span id="historyCount" aria-live="polite">진행된 기회: 0</span>
+      </h2>
+      <ul class="history-list" id="historyList">
+        <!-- History items inserted dynamically -->
+      </ul>
+    </section>
+  </main>
 
-            // 시간대에 따른 맞춤형 서브 메시지 제공
-            const hours = new Date().getHours();
-            let timeMessage = '';
+  <script>
+    // Game state definition
+    let config = {
+      min: 1,
+      max: 100,
+      customAttempts: null,
+      customSecret: null
+    };
 
-            if (hours >= 5 && hours < 12) {
-                timeMessage = '상쾌하고 활기찬 아침입니다. 오늘 하루도 좋은 일만 가득하시길 바랄게요! ☀️';
-            } else if (hours >= 12 && hours < 18) {
-                timeMessage = '나른할 수 있는 오후네요. 시원한 음료와 함께 즐거운 시간 보내세요! ☕';
-            } else if (hours >= 18 && hours < 22) {
-                timeMessage = '편안한 저녁 시간 보내고 계시기를 바랍니다. 오늘 하루 수고 많으셨어요! 🌙';
-            } else {
-                timeMessage = '고요한 밤이네요. 편안하고 따뜻한 밤 되세요. ⭐️';
-            }
+    let gameState = {
+      secretNumber: null,
+      currentMin: 1,
+      currentMax: 100,
+      totalAttempts: 7,
+      attemptsUsed: 0,
+      status: 'READY', // READY, PLAYING, WON, LOST, QUIT
+      history: []
+    };
 
-            // UI 업데이트
-            displayName.textContent = name;
-            greetingSubtext.textContent = timeMessage;
+    let speechEnabled = true;
 
-            // 애니메이션 초기화 후 다시 재생하기 위한 처리
-            resultContainer.classList.remove('show');
-            
-            // 리플로우 강제 트리거를 통해 CSS transition이 정상 적용되도록 함
-            void resultContainer.offsetWidth;
+    // Initialize on load
+    window.onload = function() {
+      // Setup keyboard listener
+      document.getElementById('guessInput').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+          handleGuessSubmit();
+        }
+      });
 
-            resultContainer.classList.add('show');
+      // Accessible accordion key triggers
+      document.getElementById('configHeaderBtn').addEventListener('keydown', function(e) {
+        if (e.key === ' ' || e.key === 'Enter') {
+          e.preventDefault();
+          toggleConfig();
+        }
+      });
+
+      resetGame();
+    };
+
+    // Text to Speech Function
+    function speak(text) {
+      if (!window.speechSynthesis) return;
+      
+      // Always announce in ARIA Live for screen readers
+      const liveRegion = document.getElementById('ariaLiveRegion');
+      if (liveRegion) {
+        liveRegion.textContent = text;
+      }
+
+      if (!speechEnabled) return;
+
+      // Cancel current speech to prevent queuing lag
+      window.speechSynthesis.cancel();
+      
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = 'ko-KR';
+      utterance.rate = 1.1; // Slightly faster for responsiveness
+      window.speechSynthesis.speak(utterance);
+    }
+
+    function toggleTTS() {
+      speechEnabled = !speechEnabled;
+      const btn = document.getElementById('ttsToggleBtn');
+      if (speechEnabled) {
+        btn.classList.remove('muted');
+        btn.setAttribute('aria-pressed', 'true');
+        btn.setAttribute('aria-label', '음성 안내 켜짐');
+        btn.innerHTML = '<span>🔊</span> 음성: 켜짐';
+        speak('음성 안내를 켭니다.');
+      } else {
+        btn.classList.add('muted');
+        btn.setAttribute('aria-pressed', 'false');
+        btn.setAttribute('aria-label', '음성 안내 꺼짐');
+        btn.innerHTML = '<span>🔇</span> 음성: 꺼짐';
+      }
+      document.getElementById('guessInput').focus();
+    }
+
+    function toggleConfig() {
+      const acc = document.getElementById('configAccordion');
+      const header = document.getElementById('configHeaderBtn');
+      const isOpen = acc.classList.contains('open');
+      
+      acc.classList.toggle('open');
+      header.setAttribute('aria-expanded', !isOpen);
+      
+      if (!isOpen) {
+        speak('게임 환경 설정 영역이 열렸습니다.');
+      } else {
+        speak('게임 환경 설정 영역이 닫혔습니다.');
+      }
+    }
+
+    function toggleAdminBox() {
+      const box = document.getElementById('adminBox');
+      const btn = document.getElementById('adminToggleBtn');
+      const isVisible = box.style.display === 'block';
+      
+      box.style.display = isVisible ? 'none' : 'block';
+      btn.setAttribute('aria-expanded', !isVisible);
+      
+      if (!isVisible) {
+        speak('출제자 도구가 열렸습니다. 정답을 수동으로 입력할 수 있습니다.');
+      } else {
+        speak('출제자 도구가 닫혔습니다.');
+      }
+    }
+
+    function applySettings() {
+      const minVal = parseInt(document.getElementById('minRangeInput').value) || 1;
+      const maxVal = parseInt(document.getElementById('maxRangeInput').value) || 100;
+      const attVal = parseInt(document.getElementById('attemptsInput').value) || null;
+
+      if (minVal >= maxVal) {
+        const errorText = '오류: 최소값은 최대값보다 작아야 합니다!';
+        alert(errorText);
+        speak(errorText);
+        return;
+      }
+
+      config.min = minVal;
+      config.max = maxVal;
+      config.customAttempts = attVal;
+      
+      toggleConfig();
+      resetGame();
+    }
+
+    function applyCustomSecret() {
+      const secretVal = parseInt(document.getElementById('customSecretInput').value);
+      if (isNaN(secretVal)) {
+        config.customSecret = null;
+        const msg = '무작위 정답 출제 모드로 전환되었습니다.';
+        alert(msg);
+        speak(msg);
+      } else {
+        if (secretVal < config.min || secretVal > config.max) {
+          const msg = `오류: 지정한 정답이 설정된 범위인 ${config.min}부터 ${config.max}까지의 범위를 벗어납니다.`;
+          alert(msg);
+          speak(msg);
+          return;
+        }
+        config.customSecret = secretVal;
+        const msg = `정답이 ${secretVal}로 고정 설정되었습니다!`;
+        alert(msg);
+        speak(msg);
+      }
+      resetGame();
+    }
+
+    function calculateAutoAttempts(min, max) {
+      const range = max - min + 1;
+      return Math.max(3, Math.ceil(Math.log2(range)));
+    }
+
+    function resetGame() {
+      const attempts = config.customAttempts || calculateAutoAttempts(config.min, config.max);
+      
+      let secret;
+      if (config.customSecret !== null && config.customSecret >= config.min && config.customSecret <= config.max) {
+        secret = config.customSecret;
+      } else {
+        secret = Math.floor(Math.random() * (config.max - config.min + 1)) + config.min;
+      }
+
+      gameState = {
+        secretNumber: secret,
+        currentMin: config.min,
+        currentMax: config.max,
+        totalAttempts: attempts,
+        attemptsUsed: 0,
+        status: 'READY',
+        history: []
+      };
+
+      document.getElementById('guessInput').value = '';
+      document.getElementById('guessInput').disabled = false;
+      document.getElementById('submitBtn').disabled = false;
+      document.getElementById('guessInput').placeholder = `${config.min} 이상 ${config.max} 이하의 숫자 입력`;
+      document.getElementById('guessInput').min = config.min;
+      document.getElementById('guessInput').max = config.max;
+
+      updateUI();
+      
+      const welcomeSpeech = `새 게임이 시작되었습니다. 범위는 ${config.min}부터 ${config.max}까지이며, 기회는 총 ${attempts}번입니다. 숫자를 입력해 주세요.`;
+      speak(welcomeSpeech);
+      
+      // Auto-focus to input for immediate screen reader/keyboard entry
+      setTimeout(() => {
+        document.getElementById('guessInput').focus();
+      }, 50);
+    }
+
+    function exitGame() {
+      if (gameState.status === 'WON' || gameState.status === 'LOST' || gameState.status === 'QUIT') {
+        return;
+      }
+
+      gameState.status = 'QUIT';
+      document.getElementById('guessInput').disabled = true;
+      document.getElementById('submitBtn').disabled = true;
+      updateUI();
+      
+      const quitSpeech = `게임을 종료하고 포기하셨습니다. 정답은 ${gameState.secretNumber}이었습니다.`;
+      speak(quitSpeech);
+    }
+
+    function handleGuessSubmit() {
+      if (gameState.status === 'WON' || gameState.status === 'LOST' || gameState.status === 'QUIT') {
+        return;
+      }
+
+      const inputEl = document.getElementById('guessInput');
+      const guess = parseInt(inputEl.value);
+
+      if (isNaN(guess)) {
+        const msg = '오류: 올바른 숫자를 입력하고 제출 버튼을 눌러주세요!';
+        alert(msg);
+        speak(msg);
+        return;
+      }
+
+      if (guess < gameState.currentMin || guess > gameState.currentMax) {
+        const msg = `오류: 현재 범위를 벗어났습니다. 현재 가능한 범위는 ${gameState.currentMin}부터 ${gameState.currentMax}까지입니다.`;
+        alert(msg);
+        speak(msg);
+        inputEl.focus();
+        return;
+      }
+
+      if (gameState.status === 'READY') {
+        gameState.status = 'PLAYING';
+      }
+
+      gameState.attemptsUsed++;
+      let result = '';
+      let speechFeedback = '';
+
+      if (guess === gameState.secretNumber) {
+        gameState.status = 'WON';
+        result = 'CORRECT';
+        speechFeedback = `정답입니다! 입력하신 ${guess}가 정답이 맞습니다. ${gameState.attemptsUsed}번째 도전만에 성공하셨습니다!`;
+      } else {
+        if (guess < gameState.secretNumber) {
+          result = 'UP';
+          gameState.currentMin = Math.max(gameState.currentMin, guess + 1);
+          speechFeedback = `업! 입력하신 ${guess}보다 정답이 더 큽니다. 다음 범위는 ${gameState.currentMin}부터 ${gameState.currentMax}까지입니다.`;
+        } else {
+          result = 'DOWN';
+          gameState.currentMax = Math.min(gameState.currentMax, guess - 1);
+          speechFeedback = `다운! 입력하신 ${guess}보다 정답이 더 작습니다. 다음 범위는 ${gameState.currentMin}부터 ${gameState.currentMax}까지입니다.`;
         }
 
-        // 입력창에 반응하여 실시간으로 타이틀이 변하는 마이크로 인터랙션
-        const nameInput = document.getElementById('userName');
-        const mainTitle = document.querySelector('h1');
+        if (gameState.attemptsUsed >= gameState.totalAttempts) {
+          gameState.status = 'LOST';
+          speechFeedback = `실패했습니다! 모든 도전 기회를 다 썼습니다. 정답은 ${gameState.secretNumber}이었습니다.`;
+        } else {
+          const remaining = gameState.totalAttempts - gameState.attemptsUsed;
+          speechFeedback += ` 남은 기회는 ${remaining}번입니다.`;
+        }
+      }
 
-        nameInput.addEventListener('input', (e) => {
-            const val = e.target.value.trim();
-            if (val) {
-                mainTitle.innerHTML = `Hello, <span style="background: var(--accent-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">${val}</span>!`;
-            } else {
-                mainTitle.textContent = 'Hello, Guest!';
-            }
-        });
-    </script>
+      gameState.history.unshift({
+        num: guess,
+        result: result,
+        idx: gameState.attemptsUsed
+      });
+
+      inputEl.value = '';
+      if (gameState.status === 'PLAYING') {
+        inputEl.placeholder = `${gameState.currentMin} 이상 ${gameState.currentMax} 이하의 숫자 입력`;
+        inputEl.focus();
+      }
+
+      updateUI();
+      speak(speechFeedback);
+    }
+
+    function updateUI() {
+      // Update Range Displays
+      document.getElementById('displayMin').innerText = gameState.currentMin;
+      document.getElementById('displayMax').innerText = gameState.currentMax;
+
+      // Update Range Reader Label (Screen reader dynamic guide)
+      const rangeVis = document.getElementById('rangeVisualizer');
+      rangeVis.setAttribute('aria-label', `현재 맞출 수 있는 숫자의 범위는 최소 ${gameState.currentMin}부터 최대 ${gameState.currentMax}까지입니다`);
+
+      // Update Slider Visual (Percentage narrow indicator)
+      const totalRange = config.max - config.min;
+      const currentRange = gameState.currentMax - gameState.currentMin;
+      
+      const fillEl = document.getElementById('connectorFill');
+      if (totalRange === 0) {
+        fillEl.style.width = '100%';
+        fillEl.style.left = '0%';
+      } else {
+        const leftPercent = ((gameState.currentMin - config.min) / totalRange) * 100;
+        const widthPercent = (currentRange / totalRange) * 100;
+        fillEl.style.left = `${leftPercent}%`;
+        fillEl.style.width = `${widthPercent}%`;
+      }
+
+      // Update attempts indicator
+      const currentLabelNum = Math.min(gameState.attemptsUsed + 1, gameState.totalAttempts);
+      document.getElementById('currentAttemptNum').innerText = gameState.status === 'WON' ? gameState.attemptsUsed : currentLabelNum;
+      document.getElementById('totalAttemptsNum').innerText = gameState.totalAttempts;
+
+      // Update Hearts and Accessibility Labels
+      const heartsContainer = document.getElementById('heartsContainer');
+      heartsContainer.innerHTML = '';
+      const remainingAttempts = gameState.totalAttempts - gameState.attemptsUsed;
+      
+      const maxHeartsToRender = Math.min(gameState.totalAttempts, 10);
+      const scaledRemaining = Math.ceil((remainingAttempts / gameState.totalAttempts) * maxHeartsToRender);
+      
+      heartsContainer.setAttribute('aria-label', `총 기회 ${gameState.totalAttempts}회 중 남은 기회 ${remainingAttempts}회`);
+
+      for (let i = 0; i < maxHeartsToRender; i++) {
+        const heartEl = document.createElement('span');
+        heartEl.className = 'heart';
+        if (i >= scaledRemaining) {
+          heartEl.classList.add('lost');
+        }
+        heartEl.innerText = '❤️';
+        heartEl.setAttribute('aria-hidden', 'true'); // Text is covered by container aria-label
+        heartsContainer.appendChild(heartEl);
+      }
+
+      // Update Feedback Card
+      const card = document.getElementById('feedbackCard');
+      const icon = document.getElementById('feedbackIcon');
+      const title = document.getElementById('feedbackTitle');
+      const desc = document.getElementById('feedbackDesc');
+
+      card.className = 'feedback-card';
+
+      if (gameState.status === 'READY') {
+        card.classList.add('ready');
+        icon.innerText = '🎯';
+        title.innerText = 'READY';
+        desc.innerText = `${gameState.currentMin}부터 ${gameState.currentMax} 사이의 숫자를 입력하고 추측을 시작하세요!`;
+      } else if (gameState.status === 'PLAYING') {
+        const latest = gameState.history[0];
+        if (latest.result === 'UP') {
+          card.classList.add('up');
+          icon.innerText = '🔥 UP';
+          title.innerText = 'UP!';
+          desc.innerText = `${latest.num}보다 큽니다. 더 큰 숫자를 입력하세요.`;
+        } else {
+          card.classList.add('down');
+          icon.innerText = '❄️ DOWN';
+          title.innerText = 'DOWN!';
+          desc.innerText = `${latest.num}보다 작습니다. 더 작은 숫자를 입력하세요.`;
+        }
+      } else if (gameState.status === 'WON') {
+        card.classList.add('correct');
+        icon.innerText = '🎉 CORRECT';
+        title.innerText = '정답입니다!';
+        desc.innerText = `${gameState.attemptsUsed}번째 기회에 정답(${gameState.secretNumber})을 맞췄습니다!`;
+        disableGameplay();
+      } else if (gameState.status === 'LOST') {
+        card.classList.add('gameover');
+        icon.innerText = '💀 GAME OVER';
+        title.innerText = '실패했습니다!';
+        desc.innerText = `모든 기회를 소진했습니다. 정답은 [ ${gameState.secretNumber} ] 이었습니다.`;
+        disableGameplay();
+      } else if (gameState.status === 'QUIT') {
+        card.classList.add('gameover');
+        icon.style.filter = 'grayscale(1)';
+        icon.innerText = '🏳️ QUIT';
+        title.innerText = '게임 종료';
+        desc.innerText = `게임을 포기하셨습니다. 정답은 [ ${gameState.secretNumber} ] 이었습니다.`;
+        disableGameplay();
+      }
+
+      // Render History List
+      const historyList = document.getElementById('historyList');
+      historyList.innerHTML = '';
+      document.getElementById('historyCount').innerText = `진행된 기회: ${gameState.attemptsUsed} / ${gameState.totalAttempts}`;
+
+      gameState.history.forEach(item => {
+        const li = document.createElement('li');
+        li.className = 'history-item';
+        
+        let badgeClass = item.result.toLowerCase();
+        let displayResult = item.result;
+        if (item.result === 'CORRECT') displayResult = '정답';
+
+        li.innerHTML = `
+          <span class="history-idx">#${item.idx}</span>
+          <span class="history-val">${item.num}</span>
+          <span class="history-badge ${badgeClass}">${displayResult}</span>
+        `;
+        historyList.appendChild(li);
+      });
+    }
+
+    function disableGameplay() {
+      document.getElementById('guessInput').disabled = true;
+      document.getElementById('guessInput').placeholder = '게임 오버';
+      document.getElementById('submitBtn').disabled = true;
+    }
+  </script>
 </body>
 </html>
